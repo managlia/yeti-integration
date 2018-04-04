@@ -8,6 +8,7 @@ services:
       - MYSQL_ROOT_PASSWORD=AOS_1895
     ports:
       - 3306:3306
+      - 10049:10049
     volumes: 
       - mysql-data:/var/lib/mysql
       
