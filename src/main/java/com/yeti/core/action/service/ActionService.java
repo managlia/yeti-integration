@@ -3,6 +3,7 @@ package com.yeti.core.action.service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import com.yeti.core.company.service.CompanyService;
 import com.yeti.core.contact.service.ContactService;
 import com.yeti.core.repository.action.ActionRepository;
 import com.yeti.core.repository.action.EmailRepository;
+import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.action.Email;
 import com.yeti.model.campaign.Campaign;
@@ -42,6 +44,9 @@ public class ActionService {
 	@Autowired
 	private CampaignService campaignService;
 
+	@Autowired
+	private TagService tagService;
+	
 	
 	public List<Action> getAllActions() {
 		List<Action> actions = new ArrayList<Action>();
@@ -105,8 +110,10 @@ public class ActionService {
 	}
 	
 	public Action addAction(Action action) {
-		//action.setCreateDate(new Date());
-		log.debug("dfm1 Adding action to string: " + action.toString());
+		action.setTags( action.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		return actionRepository.save(action);
 	}
 
@@ -126,9 +133,15 @@ public class ActionService {
 		}
 		log.debug("dfm2 Updating action with id " + action.getActionId() + "-" + id);
 		log.debug("dfm3 Updating action to string: " + action.toString());
+
+		action.setTags( action.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		
-		
-		switch (action.getClassificationType().getActionClassificationTypeId()) {
+		if( action.getClassificationType() != null && 
+				action.getClassificationType().getActionClassificationTypeId() != null ) {
+			switch (action.getClassificationType().getActionClassificationTypeId()) {
 			case "EM":
 				log.debug("Treating action as an Email");
 				Email email = emailRepository.findOne(id);
@@ -137,8 +150,11 @@ public class ActionService {
 			default:
 				log.debug("Treating action as an Action");
 				return actionRepository.save(action);
+			}
+		} else {
+			log.debug("Treating action as an Action");
+			return actionRepository.save(action);
 		}
-		
 	}
 
 	public void deleteAction(Integer id) {

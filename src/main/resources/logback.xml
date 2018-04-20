@@ -18,13 +18,11 @@
             <maxHistory>10</maxHistory>
             <totalSizeCap>10MB</totalSizeCap>
         </rollingPolicy>
-        <!-- 
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
         	<level>TRACE</level>
         	<onMatch>ACCEPT</onMatch>
         	<onMismatch>DENY</onMismatch>
         </filter>
-         -->
     </appender>
 
     <logger name="com.yeti" level="TRACE">
@@ -32,7 +30,7 @@
         <appender-ref ref="stdout"/>
     </logger>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="allAppender"/>
         <appender-ref ref="stdout"/>
     </root>

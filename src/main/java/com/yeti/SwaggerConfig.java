@@ -18,16 +18,16 @@ import springfox.documentation.builders.RequestHandlerSelectors;
 @Configuration
 @EnableSwagger2
 public class SwaggerConfig {                                    
+
     @Bean
     public Docket api() { 
         return new Docket(DocumentationType.SWAGGER_2)  
           .select()                                  
-          //.apis(this.customRequestHandlers())             
-          .apis(RequestHandlerSelectors.any())
+          .apis(RequestHandlerSelectors.any())              
           .paths(PathSelectors.any())                          
           .build();                                           
     }
-    
+
     private Predicate<RequestHandler> customRequestHandlers() {     
         return new Predicate<RequestHandler>() {
             @Override
@@ -36,13 +36,9 @@ public class SwaggerConfig {
                 return ( methods.contains(RequestMethod.GET) 
                     ||   methods.contains(RequestMethod.DELETE)
                     ||   methods.contains(RequestMethod.PUT)
-                    ||   methods.contains(RequestMethod.POST) );
+                    ||   methods.contains(RequestMethod.POST)
+                    ||   methods.contains(RequestMethod.PATCH) );
                 
-                    /*
-                    || methods.contains(RequestMethod.GET)
-                    || methods.contains(RequestMethod.PUT)
-                    || methods.contains(RequestMethod.DELETE);
-                */
             }
         };
     }

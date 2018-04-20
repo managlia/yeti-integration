@@ -1,35 +1,37 @@
 package com.yeti.core.company.service;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
 import java.util.HashSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yeti.core.action.controller.ActionController;
 import com.yeti.core.action.service.ActionService;
 import com.yeti.core.campaign.service.CampaignService;
+import com.yeti.core.types.service.TagService;
 import com.yeti.core.contact.service.ContactService;
-import com.yeti.core.repository.action.ActionRepository;
-import com.yeti.core.repository.campaign.CampaignRepository;
 import com.yeti.core.repository.company.CompanyRepository;
-import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.core.repository.types.CompanyClassificationTypeRepository;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
-import com.yeti.model.company.CompanyAddress;
 import com.yeti.model.contact.Contact;
 import com.yeti.model.general.Tag;
 import com.yeti.model.util.Batch;
 
 @Service
 public class CompanyService {
+
+	private static final Logger log = LoggerFactory.getLogger(CompanyService.class);
 	
 	@Autowired
 	private EntityManager em;
@@ -46,6 +48,9 @@ public class CompanyService {
 	@Autowired
 	private ActionService actionService;
 
+	@Autowired
+	private TagService tagService;
+	
 	@Autowired
 	CompanyClassificationTypeRepository companyClassificationTypeRepository;
 	
@@ -104,6 +109,10 @@ public class CompanyService {
 						company.getClassificationType().getClassificationTypeId();
 			}
 		company.setClassificationType(companyClassificationTypeRepository.getOne(companyClassificationTypeId));
+		company.setTags( company.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		//company.setCreateDate(new Date());
 		return addCompletedCompany(company);
 	}
@@ -129,7 +138,7 @@ public class CompanyService {
 					remainingCampaigns.add(existingCampaign);
 				} else {
 					removeOne = true;
-					System.out.println( "Want to remove " + campaignId + " and " + existingCampaign.getCampaignId() );
+					log.debug( "Want to remove " + campaignId + " and " + existingCampaign.getCampaignId() );
 				}
 			}
 		}
@@ -162,7 +171,7 @@ public class CompanyService {
 					remainingActions.add(existingAction);
 				} else {
 					removeOne = true;
-					System.out.println( "Want to remove " + actionId + " and " + existingAction.getActionId() );
+					log.debug( "Want to remove " + actionId + " and " + existingAction.getActionId() );
 				}
 			}
 		}
@@ -177,7 +186,12 @@ public class CompanyService {
 	public Company updateCompany(Integer id, Company company) {
 		company.setActions(actionService.getActionsForCompany(company.getCompanyId()));
 		company.setCampaigns(campaignService.getCampaignsForCompany(company.getCompanyId()));
+		company.setTags( company.getTags().stream()
+			.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+			.collect(Collectors.toSet())
+		);
 		return companyRepository.save(company);
+		
 	}
 
 	public void deleteCompany(Integer id) {

@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.yeti.core.repository.campaign.CampaignRepository;
 import com.yeti.core.repository.company.CompanyRepository;
 import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.core.repository.types.ContactClassificationTypeRepository;
+import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
@@ -40,6 +42,9 @@ public class ContactService {
 	@Autowired
 	private ActionService actionService;
 
+	@Autowired
+	private TagService tagService;
+	
 	@Autowired
 	ContactClassificationTypeRepository contactClassificationTypeRepository;
 	
@@ -80,6 +85,10 @@ public class ContactService {
 	}
 	
 	private Contact addCompletedContact(Contact contact) {
+		contact.setTags( contact.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		return contactRepository.save(contact);
 	}
 	
@@ -175,6 +184,10 @@ public class ContactService {
 	public Contact updateContact(Integer id, Contact contact) {
 		contact.setActions(actionService.getActionsForContact(contact.getContactId()));
 		contact.setCampaigns(campaignService.getCampaignsForContact(contact.getContactId()));
+		contact.setTags( contact.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		return contactRepository.save(contact);
 	}
 

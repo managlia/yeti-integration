@@ -3,6 +3,8 @@ package com.yeti.core.types.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,10 @@ public class TagService {
 
 	public boolean exists(Integer id) {
 		return tagRepository.exists(id);
+	}
+	
+	public Set<Tag> saveAll( Set<Tag> tags ) {
+		return new HashSet<Tag>(tagRepository.save(tags));
 	}
 	
 }

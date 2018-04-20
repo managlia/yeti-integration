@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import com.yeti.core.repository.action.ActionRepository;
 import com.yeti.core.repository.campaign.CampaignRepository;
 import com.yeti.core.repository.company.CompanyRepository;
 import com.yeti.core.repository.contact.ContactRepository;
+import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
@@ -39,6 +41,9 @@ public class CampaignService {
 
 	@Autowired
 	private ActionService actionService;
+	
+	@Autowired
+	private TagService tagService;
 	
 	
 	public List<Campaign> getAllCampaigns() {
@@ -85,7 +90,10 @@ public class CampaignService {
 	}
 	
 	public Campaign addCampaign(Campaign campaign) {
-		//campaign.setCreateDate(new Date());
+		campaign.setTags( campaign.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		return campaignRepository.save(campaign);
 	}
 
@@ -93,6 +101,10 @@ public class CampaignService {
 		campaign.setContacts(contactService.getContactsForCampaign(campaign.getCampaignId()));
 		campaign.setActions(actionService.getActionsForCampaign(campaign.getCampaignId()));
 		campaign.setCompanies(companyService.getCompaniesForCampaign(campaign.getCampaignId()));
+		campaign.setTags( campaign.getTags().stream()
+				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+				.collect(Collectors.toSet())
+			);
 		return campaignRepository.save(campaign);
 	}
 	
