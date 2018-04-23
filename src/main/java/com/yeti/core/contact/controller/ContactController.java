@@ -27,10 +27,12 @@ import com.yeti.core.action.service.ActionService;
 import com.yeti.core.campaign.service.CampaignService;
 import com.yeti.core.company.service.CompanyService;
 import com.yeti.core.contact.service.ContactService;
+import com.yeti.core.contact.service.TeamService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
 import com.yeti.model.contact.Contact;
+import com.yeti.model.contact.Team;
 import com.yeti.model.util.Batch;
 
 @RestController
@@ -42,6 +44,9 @@ public class ContactController {
 	private ContactService contactService;
 
 	@Autowired
+	private TeamService teamService;
+
+	@Autowired
 	private CampaignService campaignService;
 
 	@Autowired
@@ -51,11 +56,14 @@ public class ContactController {
 	public ResponseEntity<List<Resource<Contact>>> getAllContacts(
 			@RequestParam(required=false) Integer companyId,
 			@RequestParam(required=false) Integer campaignId,
+			@RequestParam(required=false) Integer teamId,
 			@RequestParam(required=false) Integer actionId
 	) {
 		List<Contact> contacts;
 		if( campaignId != null ) {
 			contacts = contactService.getContactsForCampaign(campaignId);
+		} else if( teamId != null ) {
+			contacts = contactService.getContactsForTeam(teamId);
 		} else if( actionId != null ) {
 			contacts = contactService.getContactsForAction(actionId);
 		} else {
@@ -157,7 +165,37 @@ public class ContactController {
 		}
 	}
 
+	@PutMapping("/{contactId}/Teams")
+	public ResponseEntity<List<Resource<Contact>>> addTeamToContact(@PathVariable Integer contactId, @RequestBody Team team) {
+		Contact contact = contactService.getContact(contactId);
+		if( contact == null ) {
+			return ResponseEntity.notFound().build();
+		} else {
+			Contact updatedContact = contactService.addTeamToContact(team.getTeamId(), contactId);
+			if( updatedContact != null ) {
+				return ResponseEntity.accepted().build();		
+			} else {
+				return ResponseEntity.badRequest().build();
+			}
+		}
+	}	
 	
+	@DeleteMapping("/{contactId}/Teams/{teamId}")
+	public ResponseEntity<Resource<Team>> removeTeamToContact(@PathVariable Integer contactId, @PathVariable Integer teamId) {
+		Contact contact = contactService.getContact(contactId);
+		Team team = teamService.getTeam(teamId);
+		if( team == null || contact == null ) {
+			return ResponseEntity.notFound().build();
+		} else {
+			Contact updatedContact = contactService.removeTeamFromContact(teamId, contactId);
+			if( updatedContact != null ) {
+				return ResponseEntity.accepted().build();		
+			} else {
+				return ResponseEntity.badRequest().build();
+			}
+		}
+	}
+
 	@PutMapping("/{contactId}/Actions")
 	public ResponseEntity<List<Resource<Contact>>> addActionToContact(@PathVariable Integer contactId, @RequestBody Action action) {
 		Contact contact = contactService.getContact(contactId);

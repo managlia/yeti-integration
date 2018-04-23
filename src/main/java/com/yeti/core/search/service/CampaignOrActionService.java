@@ -122,9 +122,4 @@ public class CampaignOrActionService {
 		}
 		return cocs;
 	}
-
-	
-	
-	
-
 }

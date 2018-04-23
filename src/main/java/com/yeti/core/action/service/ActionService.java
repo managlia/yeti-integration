@@ -1,5 +1,6 @@
 package com.yeti.core.action.service;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,12 @@ public class ActionService {
 		return actions;
 	}
 
+	public List<Action> getActions(Integer[] id) {
+		List<Action> actions = new ArrayList<Action>();
+		actionRepository.findAll(Arrays.asList(id)).forEach(actions::add);
+		return actions;
+	}
+	
 	public List<Action> getActionsForCompany(Integer companyId) {
 		List<Action> actions = new ArrayList<Action>();
 		Company queryAction = companyService.getCompany(companyId);
@@ -171,6 +178,4 @@ public class ActionService {
 	public boolean exists(Integer id) {
 		return actionRepository.exists(id);
 	}
-
-	
 }

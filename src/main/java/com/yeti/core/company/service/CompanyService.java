@@ -1,6 +1,7 @@
 package com.yeti.core.company.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.yeti.core.action.controller.ActionController;
 import com.yeti.core.action.service.ActionService;
 import com.yeti.core.campaign.service.CampaignService;
 import com.yeti.core.types.service.TagService;
@@ -25,7 +25,6 @@ import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
 import com.yeti.model.contact.Contact;
-import com.yeti.model.general.Tag;
 import com.yeti.model.util.Batch;
 
 @Service
@@ -60,6 +59,12 @@ public class CompanyService {
 		return companies;
 	}
 	
+	public List<Company> getCompanies(Integer[] id) {
+		List<Company> companies = new ArrayList<Company>();
+		companyRepository.findAll(Arrays.asList(id)).forEach(companies::add);
+		return companies;
+	}
+
 	public List<Company> getCompaniesForCampaign(Integer campaignId) {
 		List<Company> companies = new ArrayList<Company>();
 		Campaign queryCampaign = campaignService.getCampaign(campaignId);
@@ -206,5 +211,4 @@ public class CompanyService {
 		return companyRepository.exists(id);
 	}
 
-	
 }

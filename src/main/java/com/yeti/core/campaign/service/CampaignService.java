@@ -1,12 +1,10 @@
 package com.yeti.core.campaign.service;
 
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.yeti.core.action.service.ActionService;
 import com.yeti.core.company.service.CompanyService;
 import com.yeti.core.contact.service.ContactService;
-import com.yeti.core.repository.action.ActionRepository;
 import com.yeti.core.repository.campaign.CampaignRepository;
-import com.yeti.core.repository.company.CompanyRepository;
-import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
@@ -49,6 +44,12 @@ public class CampaignService {
 	public List<Campaign> getAllCampaigns() {
 		List<Campaign> campaigns = new ArrayList<Campaign>();
 		campaignRepository.findAll().forEach(campaigns::add);
+		return campaigns;
+	}
+
+	public List<Campaign> getCampaigns(Integer[] id) {
+		List<Campaign> campaigns = new ArrayList<Campaign>();
+		campaignRepository.findAll(Arrays.asList(id)).forEach(campaigns::add);
 		return campaigns;
 	}
 
@@ -177,6 +178,4 @@ public class CampaignService {
 	public boolean exists(Integer id) {
 		return campaignRepository.exists(id);
 	}
-
-	
 }

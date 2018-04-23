@@ -1,11 +1,9 @@
 package com.yeti.core.contact.service;
 
-
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,10 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.yeti.core.action.service.ActionService;
 import com.yeti.core.campaign.service.CampaignService;
-import com.yeti.core.company.service.CompanyService;
-import com.yeti.core.repository.action.ActionRepository;
-import com.yeti.core.repository.campaign.CampaignRepository;
-import com.yeti.core.repository.company.CompanyRepository;
 import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.core.repository.types.ContactClassificationTypeRepository;
 import com.yeti.core.types.service.TagService;
@@ -25,6 +19,7 @@ import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
 import com.yeti.model.contact.Contact;
+import com.yeti.model.contact.Team;
 import com.yeti.model.util.Batch;
 
 @Service
@@ -34,7 +29,7 @@ public class ContactService {
 	private ContactRepository contactRepository;
 
 	@Autowired
-	private CompanyService companyService;
+	private TeamService teamService;
 
 	@Autowired
 	private CampaignService campaignService;
@@ -57,7 +52,13 @@ public class ContactService {
 		}
 		return contacts;
 	}
-		
+
+	public List<Contact> getContacts(Integer[] id) {
+		List<Contact> contacts = new ArrayList<Contact>();
+		contactRepository.findAll(Arrays.asList(id)).forEach(contacts::add);
+		return contacts;
+	}
+	
 	public List<Contact> getContactsForCampaign(Integer campaignId) {
 		List<Contact> contacts = new ArrayList<Contact>();
 		Campaign queryCampaign = campaignService.getCampaign(campaignId);
@@ -76,6 +77,17 @@ public class ContactService {
 			HashSet<Action> ts = new HashSet<Action>();
 			ts.add(queryAction);
 			contactRepository.findDistinctByActionsIn(ts).forEach(contacts::add);
+		}
+		return contacts;
+	}
+
+	public List<Contact> getContactsForTeam(Integer teamId) {
+		List<Contact> contacts = new ArrayList<Contact>();
+		Team queryTeam = teamService.getTeam(teamId);
+		if( queryTeam != null ) {
+			HashSet<Team> ts = new HashSet<Team>();
+			ts.add(queryTeam);
+			contactRepository.findDistinctByTeamsIn(ts).forEach(contacts::add);
 		}
 		return contacts;
 	}
@@ -181,6 +193,39 @@ public class ContactService {
 		}
 	}
 	
+	@Transactional
+	public Contact addTeamToContact(Integer teamId, Integer contactId) {
+		Contact contact = getContact(contactId);
+		Team linkingTeam = teamService.getTeam(teamId);
+		contact.getTeams().add(linkingTeam);
+		return updateContact(contact.getContactId(), contact);
+	}
+
+	@Transactional
+	public Contact removeTeamFromContact(Integer teamId, Integer contactId) {
+		boolean removeOne = false;
+		Contact contact = getContact(contactId);
+		List<Team> remainingTeams = new ArrayList<Team>();
+		if( contact.getTeams() == null ) {
+			return null;
+		} else {
+			for( Team existingTeam : contact.getTeams() ) {
+				if( existingTeam.getTeamId() != teamId ) {
+					remainingTeams.add(existingTeam);
+				} else {
+					removeOne = true;
+					System.out.println( "Want to remove " + teamId + " and " + existingTeam.getTeamId() );
+				}
+			}
+		}
+		if( removeOne ) {
+			contact.setTeams(remainingTeams);
+			return updateContact(contact.getContactId(), contact);
+		} else {
+			return null;
+		}
+	}
+
 	public Contact updateContact(Integer id, Contact contact) {
 		contact.setActions(actionService.getActionsForContact(contact.getContactId()));
 		contact.setCampaigns(campaignService.getCampaignsForContact(contact.getContactId()));
@@ -202,6 +247,7 @@ public class ContactService {
 	public boolean exists(Integer id) {
 		return contactRepository.exists(id);
 	}
+
 
 	
 }
