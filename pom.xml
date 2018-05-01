@@ -32,11 +32,19 @@
 		</dependency>	
 
 
+
 <dependency>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-collections4</artifactId>
     <version>4.1</version>
 </dependency>
+
+<dependency>
+    <groupId>commons-beanutils</groupId>
+    <artifactId>commons-beanutils</artifactId>
+    <version>1.6</version>
+</dependency>
+
 	
 		<dependency>
 			<groupId>com.yeti</groupId>
@@ -119,9 +127,24 @@
 			<artifactId>joda-time</artifactId>
 		</dependency>
 		<dependency>
+		    <groupId>org.hibernate</groupId>
+		    <artifactId>hibernate-java8</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-envers</artifactId>
 		</dependency>
+		<dependency>
+		  <groupId>com.fasterxml.jackson.datatype</groupId>
+		  <artifactId>jackson-datatype-joda</artifactId>
+		</dependency>
+
+<dependency>
+  <groupId>com.fasterxml.jackson.datatype</groupId>
+  <artifactId>jackson-datatype-jsr310</artifactId>
+  <scope>compile</scope>
+</dependency>
+
 
 		<dependency>
 		    <groupId>io.springfox</groupId>

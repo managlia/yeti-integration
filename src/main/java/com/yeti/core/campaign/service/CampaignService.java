@@ -11,10 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.yeti.TenantContext;
 import com.yeti.core.action.service.ActionService;
 import com.yeti.core.company.service.CompanyService;
 import com.yeti.core.contact.service.ContactService;
 import com.yeti.core.repository.campaign.CampaignRepository;
+import com.yeti.core.repository.contact.ContactTeamRepository;
 import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
@@ -40,54 +42,60 @@ public class CampaignService {
 	@Autowired
 	private TagService tagService;
 	
+	@Autowired
+	private ContactTeamRepository contactTeamRepository;	
+	
+	private List<Integer> getTeamList(Integer userId) {
+		List<Integer> teamIds = contactTeamRepository.getTeamIds( userId );
+		if( teamIds == null ) teamIds = new ArrayList<Integer>();
+		teamIds.add(new Integer(999999999));
+		return teamIds;
+	}
 	
 	public List<Campaign> getAllCampaigns() {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 		List<Campaign> campaigns = new ArrayList<Campaign>();
-		campaignRepository.findAll().forEach(campaigns::add);
+		campaignRepository.findAll(userId, teamIds).forEach(campaigns::add);
 		return campaigns;
 	}
 
 	public List<Campaign> getCampaigns(Integer[] id) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 		List<Campaign> campaigns = new ArrayList<Campaign>();
-		campaignRepository.findAll(Arrays.asList(id)).forEach(campaigns::add);
+		campaignRepository.findAll(userId, teamIds, Arrays.asList(id)).forEach(campaigns::add);
 		return campaigns;
 	}
 
 	public List<Campaign> getCampaignsForCompany(Integer companyId) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 		List<Campaign> campaigns = new ArrayList<Campaign>();
-		Company queryAction = companyService.getCompany(companyId);
-		if( queryAction != null ) {
-			HashSet<Company> ts = new HashSet<Company>();
-			ts.add(queryAction);
-			campaignRepository.findDistinctByCompaniesIn(ts).forEach(campaigns::add);
-		}
+		campaignRepository.retrieveCampaignsForCompany(userId, teamIds, companyId).forEach(campaigns::add);
 		return campaigns;
 	}
 
 	public List<Campaign> getCampaignsForContact(Integer contactId) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 		List<Campaign> campaigns = new ArrayList<Campaign>();
-		Contact queryAction = contactService.getContact(contactId);
-		if( queryAction != null ) {
-			HashSet<Contact> ts = new HashSet<Contact>();
-			ts.add(queryAction);
-			campaignRepository.findDistinctByContactsIn(ts).forEach(campaigns::add);
-		}
+		campaignRepository.retrieveCampaignsForContact(userId, teamIds, contactId).forEach(campaigns::add);
 		return campaigns;
 	}
 
 	public List<Campaign> getCampaignsForAction(Integer actionId) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 		List<Campaign> campaigns = new ArrayList<Campaign>();
-		Action queryAction = actionService.getAction(actionId);
-		if( queryAction != null ) {
-			HashSet<Action> ts = new HashSet<Action>();
-			ts.add(queryAction);
-			campaignRepository.findDistinctByActionsIn(ts).forEach(campaigns::add);
-		}
+		campaignRepository.retrieveCampaignsForAction(userId, teamIds, actionId).forEach(campaigns::add);
 		return campaigns;
 	}
 	
 	public Campaign getCampaign(Integer id) {
-		return campaignRepository.findOne(id);
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		return campaignRepository.findOne(userId, teamIds, id);
 	}
 	
 	public Campaign addCampaign(Campaign campaign) {
@@ -168,7 +176,9 @@ public class CampaignService {
 	}
 	
 	public void deleteCampaign(Integer id) {
-		campaignRepository.delete(id);
+		if( exists(id) ) {
+			campaignRepository.delete(id);
+		}
 	}
 	
 	public void processBatchAction(Batch batch) {
@@ -176,6 +186,8 @@ public class CampaignService {
 	}
 	
 	public boolean exists(Integer id) {
-		return campaignRepository.exists(id);
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		return campaignRepository.exists(userId, teamIds, id);
 	}
 }

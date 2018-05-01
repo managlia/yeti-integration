@@ -1,11 +1,16 @@
 package com.yeti.core.contact.service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.beanutils.BeanUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,20 +19,27 @@ import com.yeti.core.action.service.ActionService;
 import com.yeti.core.campaign.service.CampaignService;
 import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.core.repository.types.ContactClassificationTypeRepository;
+import com.yeti.core.repository.user.UserRepository;
 import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
 import com.yeti.model.contact.Contact;
 import com.yeti.model.contact.Team;
+import com.yeti.model.host.User;
 import com.yeti.model.util.Batch;
 
 @Service
 public class ContactService {
 		
+	private static final Logger log = LoggerFactory.getLogger(ContactService.class);
+
 	@Autowired
 	private ContactRepository contactRepository;
 
+	@Autowired
+	private UserRepository userRepository;
+	
 	@Autowired
 	private TeamService teamService;
 
@@ -101,7 +113,30 @@ public class ContactService {
 				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
 				.collect(Collectors.toSet())
 			);
-		return contactRepository.save(contact);
+		
+		if( contact.getClassificationType().getClassificationTypeId().equals("HO") ) {
+			User u = new User();
+			// u.copyActionForSubclass(contact);
+
+			try {
+				BeanUtils.copyProperties(u, contact);
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			u.setUsername("temp123");
+			u.setEmailSystem("google");
+			u.setEmailAddress("test@test.com");
+			u.setExternalId("abc123");
+			u.setPassword("abc123");
+			return (Contact) userRepository.save(u);
+		} else {
+			return contactRepository.save(contact);
+		}
 	}
 	
 	public Contact addNewContact(Contact contact) {
@@ -233,7 +268,24 @@ public class ContactService {
 				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
 				.collect(Collectors.toSet())
 			);
-		return contactRepository.save(contact);
+		if( contact.getClassificationType().getClassificationTypeId().equals("HO") ) {
+			User u = userRepository.findOne(contact.getContactId());
+
+			try {
+				BeanUtils.copyProperties(u, contact);
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			log.debug("contact copied to user:: " + u.toString());
+			return (Contact) userRepository.save(u);
+		} else {
+			return contactRepository.save(contact);
+		}
 	}
 
 	public void deleteContact(Integer id) {

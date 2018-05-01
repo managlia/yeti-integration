@@ -25,14 +25,14 @@ public class MyCorsFilter implements Filter {
 
         response.setHeader("Access-Control-Allow-Headers", 
         		"Authorization, x-xsrf-token, Access-Control-Allow-Headers, "
-        		+ "Location, Origin, Accept, X-Requested-With, X-TEST-EXTRA, " 
+        		+ "Location, Origin, Accept, X-Requested-With, X-CHECK-ID, X-HOST-ID, " 
         		+ "Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
         
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
         response.setHeader("Access-Control-Max-Age", "3600");
         
-        response.setHeader("Access-Control-Expose-Headers", "Location, X-TEST-EXTRA");
+        response.setHeader("Access-Control-Expose-Headers", "Location, X-CHECK-ID, X-HOST-ID");
         
         if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) req).getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);

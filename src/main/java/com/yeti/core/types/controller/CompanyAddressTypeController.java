@@ -34,18 +34,8 @@ public class CompanyAddressTypeController {
 	@Autowired
 	private CompanyAddressTypeService companyAddressTypeService;
 
-	private void sleeper() {
-		try {
-			Thread.sleep( ((int)(Math.random()*10000)) );
-			
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-	}
-	
 	@GetMapping
 	public ResponseEntity<List<Resource<CompanyAddressType>>> getAllCompanyAddressTypes() {
-		this.sleeper();
 		List<CompanyAddressType> companyAddressTypes = companyAddressTypeService.getAllCompanyAddressTypes();
 		if( companyAddressTypes != null ) {
 			List<Resource<CompanyAddressType>> returnCompanyAddressTypes = new ArrayList<Resource<CompanyAddressType>>();
@@ -60,7 +50,6 @@ public class CompanyAddressTypeController {
 	
 	@GetMapping("/{id}")
 	public ResponseEntity<Resource<CompanyAddressType>> getCompanyAddressType(@PathVariable String id) {
-		this.sleeper();
 		CompanyAddressType companyAddressType = companyAddressTypeService.getCompanyAddressType(id);
 		if( companyAddressType == null ) {
 			return ResponseEntity.notFound().build();

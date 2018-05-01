@@ -5,20 +5,25 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.yeti.core.repository.campaign.CampaignRepository;
+import com.yeti.core.repository.contact.ContactTeamRepository;
 import com.yeti.core.repository.action.ActionRepository;
 import com.yeti.model.campaign.Campaign;
 import com.yeti.model.action.Action;
 import com.yeti.model.search.CampaignOrAction;
+import com.yeti.TenantContext;
 
 @Service
 public class CampaignOrActionService {
+
+	private static final Logger log = LoggerFactory.getLogger(CampaignOrActionService.class);
 
 	@Autowired
 	private CampaignRepository campaignRepository;
@@ -26,8 +31,22 @@ public class CampaignOrActionService {
 	@Autowired
 	private ActionRepository actionRepository;
 	
+	@Autowired
+	private ContactTeamRepository contactTeamRepository;
+
+	private List<Integer> getTeamList(Integer userId) {
+		List<Integer> teamIds = contactTeamRepository.getTeamIds( userId );
+		if( teamIds == null ) teamIds = new ArrayList<Integer>();
+		teamIds.add(new Integer(999999999));
+		return teamIds;
+	}
 	
 	public TreeSet<CampaignOrAction> searchCampaignOrAction(String term) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		log.debug("dfm -------------------------> user id " + userId);
+		teamIds.stream().forEach(a -> log.debug("dfm -------------------------> one team id is " + a));
+		
 		term = term.toLowerCase();
 		LinkedList<String> terms = new LinkedList<String>();
 		StringTokenizer st = new StringTokenizer(term);
@@ -35,14 +54,25 @@ public class CampaignOrActionService {
 			terms.add(st.nextToken());
 		}
 		TreeSet<CampaignOrAction> cocs = new TreeSet<CampaignOrAction>();
-		Future<List<Campaign>> futureCampaignList = campaignRepository.searchCampaignsByTerm(terms.getFirst());
-		Future<List<Action>> futureActionList = actionRepository.searchActionsByTerm(terms.getFirst());
+		Future<List<Campaign>> futureCampaignList = campaignRepository.searchCampaignsByTerm(
+				userId, 
+				teamIds, 
+				terms.getFirst());
+		Future<List<Action>> futureActionList = actionRepository.searchActionsByTerm(
+				userId, 
+				teamIds, 
+				terms.getFirst());
 		cocs.addAll(this.searchCampaigns(terms, futureCampaignList));
 		cocs.addAll(this.searchActions(terms, futureActionList));
 		return cocs;
 	}
 
 	public TreeSet<CampaignOrAction> searchCampaign(String campaign) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		log.debug("dfm -------------------------> user id " + userId);
+		teamIds.stream().forEach(a -> log.debug("dfm -------------------------> one team id is " + a));
+		
 		String term = campaign.toLowerCase();
 		LinkedList<String> terms = new LinkedList<String>();
 		StringTokenizer st = new StringTokenizer(term);
@@ -50,12 +80,20 @@ public class CampaignOrActionService {
 			terms.add(st.nextToken());
 		}
 		TreeSet<CampaignOrAction> cocs = new TreeSet<CampaignOrAction>();
-		Future<List<Campaign>> futureCampaignList = campaignRepository.searchCampaignsByTerm(terms.getFirst());
+		Future<List<Campaign>> futureCampaignList = campaignRepository.searchCampaignsByTerm(
+				userId, 
+				teamIds, 
+				terms.getFirst());
 		cocs.addAll(this.searchCampaigns(terms, futureCampaignList));
 		return cocs;
 	}
 
 	public TreeSet<CampaignOrAction> searchAction(String action) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		log.debug("dfm -------------------------> user id " + userId);
+		teamIds.stream().forEach(a -> log.debug("dfm -------------------------> one team id is " + a));
+
 		String term = action.toLowerCase();
 		LinkedList<String> terms = new LinkedList<String>();
 		StringTokenizer st = new StringTokenizer(term);
@@ -63,7 +101,10 @@ public class CampaignOrActionService {
 			terms.add(st.nextToken());
 		}
 		TreeSet<CampaignOrAction> cocs = new TreeSet<CampaignOrAction>();
-		Future<List<Action>> futureActionList = actionRepository.searchActionsByTerm(terms.getFirst());
+		Future<List<Action>> futureActionList = actionRepository.searchActionsByTerm(
+				userId, 
+				teamIds, 
+				terms.getFirst());
 		cocs.addAll(this.searchActions(terms, futureActionList));
 		return cocs;
 	}

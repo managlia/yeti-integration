@@ -1,11 +1,15 @@
 package com.yeti.core.action.service;
 
 import java.util.Arrays;
+
+import java.util.Date;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,7 @@ import com.yeti.core.company.service.CompanyService;
 import com.yeti.core.contact.service.ContactService;
 import com.yeti.core.repository.action.ActionRepository;
 import com.yeti.core.repository.action.EmailRepository;
+import com.yeti.core.repository.contact.ContactTeamRepository;
 import com.yeti.core.types.service.TagService;
 import com.yeti.model.action.Action;
 import com.yeti.model.action.Email;
@@ -24,6 +29,7 @@ import com.yeti.model.campaign.Campaign;
 import com.yeti.model.company.Company;
 import com.yeti.model.contact.Contact;
 import com.yeti.model.util.Batch;
+import com.yeti.TenantContext;
 
 @Service
 public class ActionService {
@@ -48,72 +54,66 @@ public class ActionService {
 	@Autowired
 	private TagService tagService;
 	
+	@Autowired
+	private ContactTeamRepository contactTeamRepository;
+
+	
+	private List<Integer> getTeamList(Integer userId) {
+		List<Integer> teamIds = contactTeamRepository.getTeamIds( userId );
+		if( teamIds == null ) teamIds = new ArrayList<Integer>();
+		teamIds.add(new Integer(999999999));
+		return teamIds;
+	}
 	
 	public List<Action> getAllActions() {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		
 		List<Action> actions = new ArrayList<Action>();
-		actionRepository.findAll().forEach(actions::add);
+		actionRepository.findAll(userId, teamIds).forEach(actions::add);
 		return actions;
 	}
 
 	public List<Action> getActions(Integer[] id) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+
 		List<Action> actions = new ArrayList<Action>();
-		actionRepository.findAll(Arrays.asList(id)).forEach(actions::add);
+		actionRepository.findAll(userId, teamIds, Arrays.asList(id)).forEach(actions::add);
 		return actions;
 	}
 	
 	public List<Action> getActionsForCompany(Integer companyId) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		
 		List<Action> actions = new ArrayList<Action>();
-		Company queryAction = companyService.getCompany(companyId);
-		if( queryAction != null ) {
-			HashSet<Company> ts = new HashSet<Company>();
-			ts.add(queryAction);
-			actionRepository.findDistinctByCompaniesIn(ts).forEach(actions::add);
-		}
+		actionRepository.retrieveActionsForCompany(userId, teamIds, companyId).forEach(actions::add);
 		return actions;
 	}
 
 	public List<Action> getActionsForContact(Integer contactId) {
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+
 		List<Action> actions = new ArrayList<Action>();
-		Contact queryAction = contactService.getContact(contactId);
-		if( queryAction != null ) {
-			HashSet<Contact> ts = new HashSet<Contact>();
-			ts.add(queryAction);
-			actionRepository.findDistinctByContactsIn(ts).forEach(actions::add);
-		}
+		actionRepository.retrieveActionsForContact(userId, teamIds, contactId).forEach(actions::add);
 		return actions;
 	}
 
 	public List<Action> getActionsForCampaign(Integer campaignId) {
-		List<Action> actions = new ArrayList<Action>();
-		Campaign queryAction = campaignService.getCampaign(campaignId);
-		if( queryAction != null ) {
-			HashSet<Campaign> ts = new HashSet<Campaign>();
-			ts.add(queryAction);
-			actionRepository.findDistinctByCampaignsIn(ts).forEach(actions::add);
-		}
-		return actions;
-	}
-	
-	public List<Action> getAllActionsByDescription(String actionDescription) {
-		List<Action> actions = new ArrayList<Action>();
-		actionRepository.findByDescriptionIgnoreCaseContaining(actionDescription).forEach(actions::add);
-		return actions;
-	}
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
 
-	public List<Action> getAllActionsByName(String actionName) {
 		List<Action> actions = new ArrayList<Action>();
-		actionRepository.findByNameIgnoreCaseContaining(actionName).forEach(actions::add);
+		actionRepository.retrieveActionsForCampaign(userId, teamIds, campaignId).forEach(actions::add);
 		return actions;
 	}
-	
-	public List<Action> findUsingActiveFlag(Boolean activeFlag) {
-		List<Action> actions = new ArrayList<Action>();
-		actionRepository.findUsingActiveFlag(activeFlag).forEach(actions::add);
-		return actions;
-	} 
 	
 	public Action getAction(Integer id) {
-		return actionRepository.findOne(id);
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		return actionRepository.findOne(userId, teamIds, id);
 	}
 	
 	public Action addAction(Action action) {
@@ -121,11 +121,19 @@ public class ActionService {
 				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
 				.collect(Collectors.toSet())
 			);
+		Date updateDate = new Date();
+		action.setCreateDate(updateDate);
+		action.setLastModifiedDate(updateDate);
 		return actionRepository.save(action);
 	}
 
 	public Action updateAction(Integer id, Action action) {
 
+		Date updateDate = new Date();
+		action.setLastModifiedDate(updateDate);
+		
+		
+		
 		List<Contact> contacts = contactService.getContactsForAction(action.getActionId());
 		if( ! CollectionUtils.isEmpty(contacts) ) {
 			action.setContacts(contacts);
@@ -152,7 +160,17 @@ public class ActionService {
 			case "EM":
 				log.debug("Treating action as an Email");
 				Email email = emailRepository.findOne(id);
-				email.copyActionForSubclass(action);
+
+				try {
+					BeanUtils.copyProperties(email, action);
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
 				return (Action) emailRepository.save(email);
 			default:
 				log.debug("Treating action as an Action");
@@ -166,7 +184,7 @@ public class ActionService {
 
 	public void deleteAction(Integer id) {
 		Action action = getAction(id);
-		if( action.isDeleteable() ) {
+		if( action !=null && action.isDeleteable() ) {
 			actionRepository.delete(id);
 		}
 	}
@@ -176,6 +194,8 @@ public class ActionService {
 	}
 	
 	public boolean exists(Integer id) {
-		return actionRepository.exists(id);
+		Integer userId = TenantContext.getCurrentUser();
+		List<Integer> teamIds = getTeamList( userId );
+		return actionRepository.exists(userId, teamIds, id);
 	}
 }

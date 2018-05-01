@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.yeti.TenantContext;
 import com.yeti.core.repository.company.CompanyRepository;
 import com.yeti.core.repository.contact.ContactRepository;
 import com.yeti.model.company.Company;
@@ -30,7 +31,7 @@ public class CompanyOrContactService {
 	public TreeSet<CompanyOrContact> searchCompanyOrContact(String term) {
 		term = term.toLowerCase();
 		LinkedList<String> terms = new LinkedList<String>();
-		StringTokenizer st = new StringTokenizer(term);
+		StringTokenizer st = new StringTokenizer(term); 
 		while( st.hasMoreTokens() ) {
 			terms.add(st.nextToken());
 		}
@@ -55,15 +56,23 @@ public class CompanyOrContactService {
 		return cocs;
 	}
 
-	public TreeSet<CompanyOrContact> searchContact(String contact) {
-		String term = contact.toLowerCase();
+	public TreeSet<CompanyOrContact> searchContact(String contactTerm, boolean hostOnly) {
+		String term = contactTerm.toLowerCase();
 		LinkedList<String> terms = new LinkedList<String>();
 		StringTokenizer st = new StringTokenizer(term);
 		while( st.hasMoreTokens() ) {
 			terms.add(st.nextToken());
 		}
 		TreeSet<CompanyOrContact> cocs = new TreeSet<CompanyOrContact>();
-		Future<List<Contact>> futureContactList = contactRepository.searchContactsByTerm(terms.getFirst());
+		
+		Future<List<Contact>> futureContactList;
+		if( hostOnly ) {
+			Integer companyId = TenantContext.getCurrentTenant();
+			futureContactList = contactRepository.searchContactsByTermAndHost(terms.getFirst(), companyId);
+		} else {
+			futureContactList = contactRepository.searchContactsByTerm(terms.getFirst());
+		}
+		
 		cocs.addAll(this.searchContacts(terms, futureContactList));
 		return cocs;
 	}

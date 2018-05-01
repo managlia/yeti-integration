@@ -24,17 +24,16 @@ public class CompanyOrContactController {
 	public ResponseEntity<TreeSet<CompanyOrContact>> searchCompanyOrContact(
 			@RequestParam(required=false) String term,
 			@RequestParam(required=false) String company,
-			@RequestParam(required=false) String contact
+			@RequestParam(required=false) String contact,
+			@RequestParam(required=false) boolean hostonly
 		) {
 		TreeSet<CompanyOrContact> results = new TreeSet<CompanyOrContact>();
 		if(term != null) {
 			results = companyOrContactService.searchCompanyOrContact(term);
 		} else if(company != null) {
 			results = companyOrContactService.searchCompany(company);
-			
 		} else if(contact != null) {
-			results = companyOrContactService.searchContact(contact);
-			
+			results = companyOrContactService.searchContact(contact, hostonly);
 		}
 		if( results != null ) {
 			return ResponseEntity.ok(results);
