@@ -198,10 +198,14 @@ public class CampaignController {
 	@DeleteMapping("/{campaignId}/Actions/{actionId}")
 	public ResponseEntity<Resource<Action>> removeActionToCampaign(@PathVariable Integer campaignId, @PathVariable Integer actionId) {
 		Campaign campaign = campaignService.getCampaign(campaignId);
-		Action action = actionService.getAction(actionId);
+		Action action = actionService.getAction(actionId);		
 		if( action == null || campaign == null ) {
+			System.out.println("One is null. Probably the action.");
+			System.out.println("Action:: " + action );
+			System.out.println("Campaign:: " + action );
 			return ResponseEntity.notFound().build();
 		} else {
+			System.out.println("Going for the remove.");
 			Campaign updatedCampaign = campaignService.removeActionFromCampaign(actionId, campaignId);
 			if( updatedCampaign != null ) {
 				return ResponseEntity.accepted().build();		

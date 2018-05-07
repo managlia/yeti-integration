@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import java.util.HashSet;
 
 import org.slf4j.Logger;
@@ -31,9 +29,6 @@ import com.yeti.model.util.Batch;
 public class CompanyService {
 
 	private static final Logger log = LoggerFactory.getLogger(CompanyService.class);
-	
-	@Autowired
-	private EntityManager em;
 	
 	@Autowired
 	private CompanyRepository companyRepository;
@@ -139,7 +134,7 @@ public class CompanyService {
 			return null;
 		} else {
 			for( Campaign existingCampaign : company.getCampaigns() ) {
-				if( existingCampaign.getCampaignId() != campaignId ) {
+				if( existingCampaign.getCampaignId().intValue() != campaignId.intValue() ) {
 					remainingCampaigns.add(existingCampaign);
 				} else {
 					removeOne = true;
@@ -172,7 +167,7 @@ public class CompanyService {
 			return null;
 		} else {
 			for( Action existingAction : company.getActions() ) {
-				if( existingAction.getActionId() != actionId ) {
+				if( existingAction.getActionId().intValue() != actionId.intValue() ) {
 					remainingActions.add(existingAction);
 				} else {
 					removeOne = true;

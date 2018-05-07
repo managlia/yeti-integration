@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.yeti.core.repository.audit.AuditLogDetailRepository;
 import com.yeti.model.util.AuditLogDetail;
-import com.yeti.audit.repository.AuditLogDetailRepository;
 
 @Service
 public class AuditLogDetailService {

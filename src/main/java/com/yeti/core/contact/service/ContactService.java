@@ -38,9 +38,6 @@ public class ContactService {
 	private ContactRepository contactRepository;
 
 	@Autowired
-	private UserRepository userRepository;
-	
-	@Autowired
 	private TeamService teamService;
 
 	@Autowired
@@ -110,33 +107,10 @@ public class ContactService {
 	
 	private Contact addCompletedContact(Contact contact) {
 		contact.setTags( contact.getTags().stream()
-				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
-				.collect(Collectors.toSet())
-			);
-		
-		if( contact.getClassificationType().getClassificationTypeId().equals("HO") ) {
-			User u = new User();
-			// u.copyActionForSubclass(contact);
-
-			try {
-				BeanUtils.copyProperties(u, contact);
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			u.setUsername("temp123");
-			u.setEmailSystem("google");
-			u.setEmailAddress("test@test.com");
-			u.setExternalId("abc123");
-			u.setPassword("abc123");
-			return (Contact) userRepository.save(u);
-		} else {
-			return contactRepository.save(contact);
-		}
+			.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+			.collect(Collectors.toSet())
+		);
+		return contactRepository.save(contact);
 	}
 	
 	public Contact addNewContact(Contact contact) {
@@ -179,7 +153,7 @@ public class ContactService {
 			return null;
 		} else {
 			for( Campaign existingCampaign : contact.getCampaigns() ) {
-				if( existingCampaign.getCampaignId() != campaignId ) {
+				if( existingCampaign.getCampaignId().intValue() != campaignId.intValue() ) {
 					remainingCampaigns.add(existingCampaign);
 				} else {
 					removeOne = true;
@@ -212,7 +186,7 @@ public class ContactService {
 			return null;
 		} else {
 			for( Action existingAction : contact.getActions() ) {
-				if( existingAction.getActionId() != actionId ) {
+				if( existingAction.getActionId().intValue() != actionId.intValue() ) {
 					remainingActions.add(existingAction);
 				} else {
 					removeOne = true;
@@ -245,7 +219,7 @@ public class ContactService {
 			return null;
 		} else {
 			for( Team existingTeam : contact.getTeams() ) {
-				if( existingTeam.getTeamId() != teamId ) {
+				if( existingTeam.getTeamId().intValue() != teamId.intValue() ) {
 					remainingTeams.add(existingTeam);
 				} else {
 					removeOne = true;
@@ -265,27 +239,10 @@ public class ContactService {
 		contact.setActions(actionService.getActionsForContact(contact.getContactId()));
 		contact.setCampaigns(campaignService.getCampaignsForContact(contact.getContactId()));
 		contact.setTags( contact.getTags().stream()
-				.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
-				.collect(Collectors.toSet())
-			);
-		if( contact.getClassificationType().getClassificationTypeId().equals("HO") ) {
-			User u = userRepository.findOne(contact.getContactId());
-
-			try {
-				BeanUtils.copyProperties(u, contact);
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvocationTargetException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			log.debug("contact copied to user:: " + u.toString());
-			return (Contact) userRepository.save(u);
-		} else {
-			return contactRepository.save(contact);
-		}
+			.map( tag -> tag.getTagId() == null ? tagService.addTag(tag) : tag )
+			.collect(Collectors.toSet())
+		);
+		return contactRepository.save(contact);
 	}
 
 	public void deleteContact(Integer id) {

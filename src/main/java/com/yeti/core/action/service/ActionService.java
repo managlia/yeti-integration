@@ -113,6 +113,7 @@ public class ActionService {
 	public Action getAction(Integer id) {
 		Integer userId = TenantContext.getCurrentUser();
 		List<Integer> teamIds = getTeamList( userId );
+		System.out.println("Team Ids: " + teamIds);
 		return actionRepository.findOne(userId, teamIds, id);
 	}
 	

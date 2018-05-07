@@ -5,12 +5,14 @@ import java.util.TimeZone;
 import javax.annotation.PostConstruct;
 
 import org.springframework.boot.SpringApplication;
-
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.hateoas.config.EnableEntityLinks;
 
 @SpringBootApplication
-@EnableEntityLinks
+//@EnableEntityLinks
+//@EnableAutoConfiguration (exclude = {  DataSourceAutoConfiguration.class })
 public class AosIntegrationApplication {
 //
 //	@PostConstruct
@@ -23,6 +25,5 @@ public class AosIntegrationApplication {
 		SpringApplication.run(AosIntegrationApplication.class, args);
 	}
 	
-
 }
 

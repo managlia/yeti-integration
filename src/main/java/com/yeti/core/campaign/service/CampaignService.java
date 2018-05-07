@@ -134,11 +134,10 @@ public class CampaignService {
 			return null;
 		} else {
 			for( Action existingAction : campaign.getActions() ) {
-				if( existingAction.getActionId() != actionId ) {
+				if( existingAction.getActionId().intValue() != actionId.intValue() ) {
 					remainingActions.add(existingAction);
 				} else {
 					removeOne = true;
-					System.out.println( "Want to remove " + actionId + " and " + existingAction.getActionId() );
 				}
 			}
 		}
@@ -166,7 +165,7 @@ public class CampaignService {
 			return null;
 		} else {
 			for( Company existingCompany : companies) {
-				if( existingCompany.getCompanyId() == company.getCompanyId() ) {
+				if( existingCompany.getCompanyId().intValue() == company.getCompanyId().intValue() ) {
 					companies.remove(existingCompany);
 				}
 			}

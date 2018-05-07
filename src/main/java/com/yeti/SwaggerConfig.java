@@ -15,7 +15,7 @@ import springfox.documentation.RequestHandler;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 
-@Configuration
+//@Configuration
 @EnableSwagger2
 public class SwaggerConfig {                                    
 
