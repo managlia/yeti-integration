@@ -1,5 +1,9 @@
 package com.yeti;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -24,7 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
   basePackages = { "com.yetix.core.repository" }
 )
 public class YetixDbConfig {
- 
+	
   @Bean(name = "yetiDataSource")
   @ConfigurationProperties(prefix = "yetix.datasource")
   public DataSource yetiDataSource() {
@@ -34,13 +38,20 @@ public class YetixDbConfig {
   @Bean(name = "yetiEntityManagerFactory")
   public LocalContainerEntityManagerFactoryBean yetiEntityManagerFactory
   						(EntityManagerFactoryBuilder builder, @Qualifier("yetiDataSource") DataSource yetiDataSource) {
-    return
+
+	  Map<String, Object> vendorProperties = new HashMap<String, Object>();
+      vendorProperties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+      vendorProperties.put("hibernate.show_sql", "true");
+      
+	  return
       builder
         .dataSource(yetiDataSource)
         .packages("com.yetix.model")
+        .properties(vendorProperties)
         .persistenceUnit("yeti")
         .build();
   }
+  
 
   @Bean(name = "yetiTransactionManager")
   public PlatformTransactionManager yetiTransactionManager

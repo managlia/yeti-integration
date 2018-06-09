@@ -12,8 +12,8 @@ CREATE TABLE aos.team (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 
-DROP TABLE IF EXISTS contact_team;
-CREATE TABLE contact_team (
+DROP TABLE IF EXISTS aos.contact_team;
+CREATE TABLE aos.contact_team (
   contact_team_id int(10) unsigned NOT NULL AUTO_INCREMENT,
   contact_id int(10) unsigned NOT NULL,
   team_id int(10) unsigned NOT NULL,

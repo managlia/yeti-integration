@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS send_queue;
 
 CREATE TABLE send_queue (
-  send_queue_id bigserial,
+  send_queue_id serial,
   send_queue_creator_id varchar(50) NULL,
   send_queue_creator_external_id varchar(50) NULL,
   send_queue_item_type varchar(20) NULL, -- ical for now

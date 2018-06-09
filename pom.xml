@@ -157,6 +157,15 @@
 </dependency>
 
 
+
+<!-- https://mvnrepository.com/artifact/org.mnode.ical4j/ical4j -->
+<dependency>
+    <groupId>org.mnode.ical4j</groupId>
+    <artifactId>ical4j</artifactId>
+    <version>2.2.0</version>
+</dependency>
+
+
 		<dependency>
 		    <groupId>io.springfox</groupId>
 		    <artifactId>springfox-swagger2</artifactId>

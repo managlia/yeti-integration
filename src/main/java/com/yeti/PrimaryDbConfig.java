@@ -1,5 +1,8 @@
 package com.yeti;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
@@ -36,10 +39,16 @@ public class PrimaryDbConfig {
   @Bean(name = "entityManagerFactory")
   public LocalContainerEntityManagerFactoryBean entityManagerFactory
   						(EntityManagerFactoryBuilder builder, @Qualifier("dataSource") DataSource dataSource) {
-    return
+
+	  Map<String, Object> vendorProperties = new HashMap<String, Object>();
+      vendorProperties.put("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
+      vendorProperties.put("hibernate.show_sql", "true");
+
+      return
       builder
         .dataSource(dataSource)
         .packages("com.yeti.model")
+        .properties(vendorProperties)
         .persistenceUnit("primary")
         .build();
   }

@@ -24,6 +24,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import com.yeti.core.send.service.SendService;
 import com.yetix.model.send.SendQueue;
+import com.yeti.model.action.Action;
 import com.yeti.model.util.Batch;
 
 @RestController
@@ -49,8 +50,8 @@ public class SendController {
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<Resource<SendQueue>> getSendQueue(@PathVariable Integer integer) {
-		SendQueue send = sendService.getSendQueue(integer);
+	public ResponseEntity<Resource<SendQueue>> getSendQueue(@PathVariable Integer id) {
+		SendQueue send = sendService.getFromSendQueue(id);
 		if( send == null ) {
 			return ResponseEntity.notFound().build();
 		} else {
@@ -59,8 +60,8 @@ public class SendController {
 	}
 	
 	@PostMapping
-	public ResponseEntity<Resource<SendQueue>> addSendQueue(@RequestBody SendQueue send, HttpServletRequest request ) {
-		SendQueue newSendQueue = sendService.addSendQueue(send);
+	public ResponseEntity<Resource<SendQueue>> addToSendQueueFromAction(@RequestBody Action action, HttpServletRequest request ) {
+		SendQueue newSendQueue = sendService.addToSendQueueFromAction(action);
 		if( newSendQueue != null ) {
 			String requestURI = request.getRequestURI();
 			try {
@@ -74,12 +75,11 @@ public class SendController {
 	}
 	
 	@PutMapping("/{id}")
-	public ResponseEntity<Resource<SendQueue>> updateSendQueue(@RequestBody SendQueue send, @PathVariable String id) {
+	public ResponseEntity<Resource<SendQueue>> updateSendQueue(@RequestBody Action action, @PathVariable Integer id) {
 		if( !sendService.exists(id) ) {
 			return ResponseEntity.notFound().build();
 		} else {
-			sendService.updateSendQueue(id, send);
-			SendQueue updatedSendQueue = sendService.updateSendQueue(id, send);
+			SendQueue updatedSendQueue = sendService.updateSendQueueFromAction(id, action);
 			if( updatedSendQueue != null ) {
 				return ResponseEntity.accepted().build();		
 			} else {
@@ -89,11 +89,11 @@ public class SendController {
 	}
 	
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Resource<SendQueue>> deleteSendQueue(@PathVariable String id) {
+	public ResponseEntity<Resource<SendQueue>> deleteFromSendQueue(@PathVariable Integer id) {
 		if( !sendService.exists(id) ) {
 			return ResponseEntity.notFound().build();
 		} else {
-			sendService.deleteSendQueue(id);
+			sendService.deleteFromSendQueue(id);
 			if( !sendService.exists(id) ) {
 				return ResponseEntity.accepted().build();		
 			} else {
